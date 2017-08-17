@@ -8,30 +8,68 @@
 
 #import "ViewController.h"
 
-@interface ViewController () <UITableViewDataSource>
+static CGFloat const itemWidth = 50.0;
+static CGFloat const cellsSpacing = 10.0;
+static CGFloat const sectionInset = 10.0;
 
-@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@interface ViewController () <UICollectionViewDataSource, UICollectionViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+@property (weak, nonatomic) IBOutlet UISegmentedControl *segmentControl;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *collectionViewWidthConstraint;
 
 @end
 
 @implementation ViewController
 
-- (void)viewDidLoad {
+#pragma mark - ViewLifeCycle
+
+- (void)viewDidLoad
+{
   [super viewDidLoad];
-  self.tableView.tableFooterView = [UIView new];
+  [self updateCollectionViewWidth];
 }
 
-#pragma mark - UITableViewDataSource
+#pragma mark - UI
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+- (void)updateCollectionViewWidth
 {
-  return 1;
+  [self.collectionView reloadData];
+  
+  NSInteger itemsCount = self.segmentControl.selectedSegmentIndex + 1;
+  itemsCount = MIN(4, itemsCount);
+  CGFloat newWidth = itemWidth * itemsCount + cellsSpacing * itemsCount + sectionInset;
+  [UIView animateWithDuration:0.3 animations:^{
+    self.collectionViewWidthConstraint.constant = newWidth;
+    [self.view layoutIfNeeded];
+  }];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+#pragma mark - UICollectionViewDataSource
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-  UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"customCell" forIndexPath:indexPath];
+  return self.segmentControl.selectedSegmentIndex + 1;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+  UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"customCell" forIndexPath:indexPath];
   return cell;
+}
+
+#pragma mark - UICollectionViewDelegate
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+  NSLog(@"selected item at index %zd", indexPath.row);
+}
+
+#pragma mark - Actions
+
+- (IBAction)numberOfItemsChanged:(UISegmentedControl *)sender
+{
+  [self updateCollectionViewWidth];
 }
 
 @end
